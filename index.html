@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotepadIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .rotate-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+        
+        .rotate-3d:hover {
+            transform: rotateY(10deg) rotateX(5deg);
+        }
+        
+        .neumorphism {
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+        }
+        
+        .neumorphism-inset {
+            box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+        }
+        
+        .note-card:hover, .task-card:hover, .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-message.user {
+            border-radius: 18px 18px 0 18px;
+        }
+        
+        .chat-message.bot {
+            border-radius: 18px 18px 18px 0;
+        }
+        
+        .language-flag {
+            width: 24px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 8px;
+            background-size: cover;
+            border-radius: 2px;
+        }
+        
+        .profile-pic {
+            transition: all 0.3s ease;
+        }
+        
+        .profile-pic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .illustration {
+            opacity: 0;
+            transition: all 0.5s ease;
+            transform: translateY(20px);
+        }
+        
+        .illustration.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <button onclick="login()">Entrar</button>
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 flex items-center justify-center gradient-bg z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 neumorphism">
+            <div class="flex justify-center mb-8">
+                <div class="bg-indigo-100 p-4 rounded-full rotate-3d">
+                    <i class="fas fa-edit text-indigo-600 text-4xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">NotepadIA</h1>
+            <p class="text-center text-gray-600 mb-8">Seu espaço inteligente para notas e tarefas</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset" placeholder="seu@email.com">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset" placeholder="••••••••">
+                </div>
+                <button id="login-btn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Entrar
+                </button>
+                <button id="google-login" class="w-full bg-white text-gray-700 py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 font-medium shadow-sm flex items-center justify-center space-x-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google logo" class="h-5">
+                    <span>Entrar com Google</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>Ainda não tem uma conta? <span class="text-indigo-600 cursor-pointer hover:underline">Crie uma</span></p>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <div class="scroll-indicator inline-block">
+                    <i class="fas fa-chevron-down text-gray-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating illustrations -->
+        <div class="illustration absolute top-20 left-10 w-24 h-24 bg-indigo-100 rounded-full opacity-20"></div>
+        <div class="illustration absolute bottom-20 right-10 w-32 h-32 bg-purple-100 rounded-full opacity-20"></div>
+        <div class="illustration absolute top-1/3 right-1/4 w-16 h-16 bg-pink-100 rounded-full opacity-20"></div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="mr-4 text-gray-600 hover:text-indigo-600">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">NotepadIA</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button id="language-btn" class="flex items-center text-gray-600 hover:text-indigo-600">
+                        <span class="language-flag" style="background-image: url('https://flagcdn.com/16x12/br.png')"></span>
+                        <span id="current-language">PT</span>
+                    </button>
+                    <div id="language-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                        <div class="py-1">
+                            <a href="#" data-lang="pt" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                <span class="language-flag" style="background-image: url('https://flagcdn.com/16x12/br.png')"></span>
+                                Português
+                            </a>
+                            <a href="#" data-lang="en" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                <span class="language-flag" style="background-image: url('https://flagcdn.com/16x12/us.png')"></span>
+                                English
+                            </a>
+                            <a href="#" data-lang="es" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                <span class="language-flag" style="background-image: url('https://flagcdn.com/16x12/es.png')"></span>
+                                Español
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div id="user-avatar" class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium cursor-pointer profile-pic">
+                    U
+                </div>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar bg-white border-r border-gray-200 w-64 flex flex-col">
+                <div class="p-4 border-b border-gray-200 flex items-center">
+                    <i class="fas fa-edit text-indigo-600 text-2xl mr-3 rotate-3d"></i>
+                    <span class="logo-text font-semibold text-gray-800">NotepadIA</span>
+                </div>
+                
+                <nav class="flex-1 overflow-y-auto py-4">
+                    <ul class="space-y-1 px-3">
+                        <li>
+                            <a href="#" data-tab="notes" class="menu-item flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fas fa-sticky-note mr-3 text-lg"></i>
+                                <span class="sidebar-text">Notas</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="tasks" class="menu-item flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fas fa-tasks mr-3 text-lg"></i>
+                                <span class="sidebar-text">Tarefas</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="projects" class="menu-item flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fas fa-folder mr-3 text-lg"></i>
+                                <span class="sidebar-text">Projetos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="chatbot" class="menu-item flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fas fa-robot mr-3 text-lg"></i>
+                                <span class="sidebar-text">ChatBot</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="profile" class="menu-item flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fas fa-user mr-3 text-lg"></i>
+                                <span class="sidebar-text">Perfil</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex items-center">
+                        <div id="sidebar-avatar" class="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium mr-3 cursor-pointer profile-pic">
+                            U
+                        </div>
+                        <div>
+                            <p id="sidebar-username" class="text-sm font-medium text-gray-800">Usuário</p>
+                            <p id="sidebar-status" class="text-xs text-gray-500">Free</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+                <!-- Notes Tab -->
+                <div id="notes-tab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">Minhas Notas</h2>
+                        <button id="new-note-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span id="new-note-text">Nova Nota</span>
+                        </button>
+                    </div>
+                    
+                    <div id="notes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Notes will be added here dynamically -->
+                    </div>
+                    
+                    <div id="note-editor" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                <input type="text" id="note-title" placeholder="Título da nota" class="text-xl font-semibold w-full focus:outline-none">
+                                <button id="close-editor" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 overflow-auto p-4">
+                                <textarea id="note-content" class="w-full h-full min-h-[300px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Escreva sua nota aqui..."></textarea>
+                            </div>
+                            <div class="p-4 border-t border-gray-200 flex justify-end space-x-3">
+                                <button id="cancel-note" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button id="save-note" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                    Salvar Nota
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Tab -->
+                <div id="tasks-tab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">Minhas Tarefas</h2>
+                        <button id="new-task-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span id="new-task-text">Nova Tarefa</span>
+                        </button>
+                    </div>
+                    
+                    <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Tasks will be added here dynamically -->
+                    </div>
+                    
+                    <div id="task-editor" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                <input type="text" id="task-title" placeholder="Título da tarefa" class="text-xl font-semibold w-full focus:outline-none">
+                                <button id="close-task-editor" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 overflow-auto p-4">
+                                <textarea id="task-description" class="w-full h-full min-h-[300px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Descreva sua tarefa aqui..."></textarea>
+                            </div>
+                            <div class="p-4 border-t border-gray-200 flex justify-end space-x-3">
+                                <button id="cancel-task" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button id="save-task" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                    Salvar Tarefa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Tab -->
+                <div id="projects-tab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">Meus Projetos</h2>
+                        <button id="new-project-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span id="new-project-text">Novo Projeto</span>
+                        </button>
+                    </div>
+                    
+                    <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Projects will be added here dynamically -->
+                    </div>
+                    
+                    <div id="project-editor" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                <input type="text" id="project-title" placeholder="Título do projeto" class="text-xl font-semibold w-full focus:outline-none">
+                                <button id="close-project-editor" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 overflow-auto p-4">
+                                <textarea id="project-description" class="w-full h-full min-h-[300px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Descreva seu projeto aqui..."></textarea>
+                            </div>
+                            <div class="p-4 border-t border-gray-200 flex justify-end space-x-3">
+                                <button id="cancel-project" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button id="save-project" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                    Salvar Projeto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ChatBot Tab -->
+                <div id="chatbot-tab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">ChatBot IA</h2>
+                        <div class="flex items-center bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">
+                            <i class="fas fa-circle text-xs mr-2"></i>
+                            <span id="chatbot-status">Online</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col neumorphism" style="height: 70vh;">
+                        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                            <div class="chat-message bot bg-indigo-50 text-gray-800 p-4 max-w-xs md:max-w-md lg:max-w-lg slide-up">
+                                <p>Olá! Eu sou o NotepadIA, seu assistente inteligente. Como posso te ajudar hoje?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 border-t border-gray-200">
+                            <div class="flex space-x-2">
+                                <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset">
+                                <button id="send-chat" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2" id="chat-disclaimer">NotepadIA pode gerar informações incorretas. Verifique sempre as informações importantes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div id="profile-tab" class="tab-content hidden">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-semibold text-gray-800">Meu Perfil</h2>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm p-6 neumorphism">
+                            <div class="flex flex-col items-center mb-8">
+                                <div class="relative mb-4">
+                                    <div id="profile-pic-container" class="h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-4xl font-medium cursor-pointer profile-pic overflow-hidden">
+                                        <img id="profile-pic" src="" alt="Profile picture" class="h-full w-full object-cover hidden">
+                                        <span id="profile-initial">U</span>
+                                    </div>
+                                    <input type="file" id="profile-pic-input" accept="image/*" class="hidden">
+                                    <button id="change-profile-pic" class="absolute bottom-0 right-0 bg-indigo-600 text-white rounded-full p-2 shadow-md hover:bg-indigo-700">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                <h3 id="profile-name" class="text-xl font-semibold text-gray-800">Usuário</h3>
+                                <p id="profile-status" class="text-sm text-gray-500">Free</p>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label for="full-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                                    <input type="text" id="full-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset" placeholder="Seu nome completo">
+                                </div>
+                                
+                                <div>
+                                    <label for="nickname" class="block text-sm font-medium text-gray-700 mb-1">Apelido</label>
+                                    <input type="text" id="nickname" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset" placeholder="Seu apelido">
+                                </div>
+                                
+                                <div>
+                                    <label for="user-status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select id="user-status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 neumorphism-inset">
+                                        <option value="free">Free</option>
+                                        <option value="premium">Premium</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="pt-4">
+                                    <button id="save-profile" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium shadow-md hover:shadow-lg">
+                                        Salvar Perfil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 py-4 px-6 text-center text-sm text-gray-600">
+            <div class="flex justify-center space-x-6 mb-2">
+                <a href="https://www.instagram.com/rezidevy/?igsh=ZDR5a3Zkempwa2Yx#" target="_blank" class="hover:text-indigo-600">
+                    <i class="fab fa-instagram mr-1"></i> @rezidevy
+                </a>
+                <a href="https://github.com/ReziDevy" target="_blank" class="hover:text-indigo-600">
+                    <i class="fab fa-github mr-1"></i> github.com/ReziDevy
+                </a>
+                <a href="https://portfolio-rezidevy-9z8353tzo-rezidevys-projects.vercel.app/" target="_blank" class="hover:text-indigo-600">
+                    <i class="fas fa-globe mr-1"></i> PortfolioReziDevy
+                </a>
+            </div>
+            <p>Todos os direitos reservados a Bruno Rezende © 2025 | ReziDev</p>
+        </footer>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            pt: {
+                login: {
+                    title: "NotepadIA",
+                    subtitle: "Seu espaço inteligente para notas e tarefas",
+                    email: "E-mail",
+                    emailPlaceholder: "seu@email.com",
+                    password: "Senha",
+                    loginBtn: "Entrar",
+                    googleLogin: "Entrar com Google",
+                    noAccount: "Ainda não tem uma conta?",
+                    createAccount: "Crie uma"
+                },
+                app: {
+                    notes: "Notas",
+                    tasks: "Tarefas",
+                    projects: "Projetos",
+                    chatbot: "ChatBot",
+                    profile: "Perfil",
+                    newNote: "Nova Nota",
+                    newTask: "Nova Tarefa",
+                    newProject: "Novo Projeto",
+                    myNotes: "Minhas Notas",
+                    myTasks: "Minhas Tarefas",
+                    myProjects: "Meus Projetos",
+                    myProfile: "Meu Perfil",
+                    noNotes: "Você ainda não tem notas. Clique em \"Nova Nota\" para começar.",
+                    noTasks: "Você ainda não tem tarefas. Clique em \"Nova Tarefa\" para começar.",
+                    noProjects: "Você ainda não tem projetos. Clique em \"Novo Projeto\" para começar.",
+                    chatbotTitle: "ChatBot IA",
+                    chatbotStatus: "Online",
+                    chatbotPlaceholder: "Digite sua mensagem...",
+                    chatbotDisclaimer: "NotepadIA pode gerar informações incorretas. Verifique sempre as informações importantes.",
+                    noteTitlePlaceholder: "Título da nota",
+                    noteContentPlaceholder: "Escreva sua nota aqui...",
+                    taskTitlePlaceholder: "Título da tarefa",
+                    taskDescriptionPlaceholder: "Descreva sua tarefa aqui...",
+                    projectTitlePlaceholder: "Título do projeto",
+                    projectDescriptionPlaceholder: "Descreva seu projeto aqui...",
+                    cancel: "Cancelar",
+                    saveNote: "Salvar Nota",
+                    saveTask: "Salvar Tarefa",
+                    saveProject: "Salvar Projeto",
+                    saveProfile: "Salvar Perfil",
+                    fullName: "Nome Completo",
+                    nickname: "Apelido",
+                    userStatus: "Status",
+                    free: "Free",
+                    premium: "Premium",
+                    user: "Usuário",
+                    changePhoto: "Alterar foto",
+                    profileSaved: "Perfil salvo com sucesso!",
+                    taskSaved: "Tarefa salva com sucesso!",
+                    projectSaved: "Projeto salvo com sucesso!"
+                },
+                chatbot: {
+                    greetings: ["Olá!", "Oi!", "Oi, como vai?", "Olá, como posso ajudar?"],
+                    help: [
+                        "Você pode criar notas clicando no botão 'Nova Nota' na aba de Notas.",
+                        "Para organizar melhor suas tarefas, tente categorizá-las por prioridade.",
+                        "Lembre-se de salvar suas notas regularmente para não perder informações importantes.",
+                        "Você pode me perguntar sobre como usar o NotepadIA."
+                    ],
+                    unknown: "Desculpe, não entendi. Você pode reformular sua pergunta?",
+                    thanks: "De nada! Estou aqui para ajudar.",
+                    bye: "Até logo! Volte sempre que precisar."
+                }
+            },
+            en: {
+                login: {
+                    title: "NotepadIA",
+                    subtitle: "Your smart space for notes and tasks",
+                    email: "Email",
+                    emailPlaceholder: "your@email.com",
+                    password: "Password",
+                    loginBtn: "Login",
+                    googleLogin: "Sign in with Google",
+                    noAccount: "Don't have an account?",
+                    createAccount: "Create one"
+                },
+                app: {
+                    notes: "Notes",
+                    tasks: "Tasks",
+                    projects: "Projects",
+                    chatbot: "ChatBot",
+                    profile: "Profile",
+                    newNote: "New Note",
+                    newTask: "New Task",
+                    newProject: "New Project",
+                    myNotes: "My Notes",
+                    myTasks: "My Tasks",
+                    myProjects: "My Projects",
+                    myProfile: "My Profile",
+                    noNotes: "You don't have any notes yet. Click \"New Note\" to get started.",
+                    noTasks: "You don't have any tasks yet. Click \"New Task\" to get started.",
+                    noProjects: "You don't have any projects yet. Click \"New Project\" to get started.",
+                    chatbotTitle: "AI ChatBot",
+                    chatbotStatus: "Online",
+                    chatbotPlaceholder: "Type your message...",
+                    chatbotDisclaimer: "NotepadIA may generate incorrect information. Always verify important information.",
+                    noteTitlePlaceholder: "Note title",
+                    noteContentPlaceholder: "Write your note here...",
+                    taskTitlePlaceholder: "Task title",
+                    taskDescriptionPlaceholder: "Describe your task here...",
+                    projectTitlePlaceholder: "Project title",
+                    projectDescriptionPlaceholder: "Describe your project here...",
+                    cancel: "Cancel",
+                    saveNote: "Save Note",
+                    saveTask: "Save Task",
+                    saveProject: "Save Project",
+                    saveProfile: "Save Profile",
+                    fullName: "Full Name",
+                    nickname: "Nickname",
+                    userStatus: "Status",
+                    free: "Free",
+                    premium: "Premium",
+                    user: "User",
+                    changePhoto: "Change photo",
+                    profileSaved: "Profile saved successfully!",
+                    taskSaved: "Task saved successfully!",
+                    projectSaved: "Project saved successfully!"
+                },
+                chatbot: {
+                    greetings: ["Hello!", "Hi!", "Hi there!", "Hello, how can I help?"],
+                    help: [
+                        "You can create notes by clicking the 'New Note' button in the Notes tab.",
+                        "To better organize your tasks, try categorizing them by priority.",
+                        "Remember to save your notes regularly so you don't lose important information.",
+                        "You can ask me about how to use NotepadIA."
+                    ],
+                    unknown: "Sorry, I didn't understand. Could you rephrase your question?",
+                    thanks: "You're welcome! I'm here to help.",
+                    bye: "Goodbye! Come back whenever you need."
+                }
+            },
+            es: {
+                login: {
+                    title: "NotepadIA",
+                    subtitle: "Tu espacio inteligente para notas y tareas",
+                    email: "Correo electrónico",
+                    emailPlaceholder: "tu@email.com",
+                    password: "Contraseña",
+                    loginBtn: "Iniciar sesión",
+                    googleLogin: "Iniciar con Google",
+                    noAccount: "¿No tienes una cuenta?",
+                    createAccount: "Crea una"
+                },
+                app: {
+                    notes: "Notas",
+                    tasks: "Tareas",
+                    projects: "Proyectos",
+                    chatbot: "ChatBot",
+                    profile: "Perfil",
+                    newNote: "Nueva Nota",
+                    newTask: "Nueva Tarea",
+                    newProject: "Nuevo Proyecto",
+                    myNotes: "Mis Notas",
+                    myTasks: "Mis Tareas",
+                    myProjects: "Mis Proyectos",
+                    myProfile: "Mi Perfil",
+                    noNotes: "Aún no tienes notas. Haz clic en \"Nueva Nota\" para comenzar.",
+                    noTasks: "Aún no tienes tareas. Haz clic en \"Nueva Tarea\" para comenzar.",
+                    noProjects: "Aún no tienes proyectos. Haz clic en \"Nuevo Proyecto\" para comenzar.",
+                    chatbotTitle: "ChatBot IA",
+                    chatbotStatus: "En línea",
+                    chatbotPlaceholder: "Escribe tu mensaje...",
+                    chatbotDisclaimer: "NotepadIA puede generar información incorrecta. Siempre verifica la información importante.",
+                    noteTitlePlaceholder: "Título de la nota",
+                    noteContentPlaceholder: "Escribe tu nota aquí...",
+                    taskTitlePlaceholder: "Título de la tarea",
+                    taskDescriptionPlaceholder: "Describe tu tarea aquí...",
+                    projectTitlePlaceholder: "Título del proyecto",
+                    projectDescriptionPlaceholder: "Describe tu proyecto aquí...",
+                    cancel: "Cancelar",
+                    saveNote: "Guardar Nota",
+                    saveTask: "Guardar Tarefa",
+                    saveProject: "Guardar Proyecto",
+                    saveProfile: "Guardar Perfil",
+                    fullName: "Nombre Completo",
+                    nickname: "Apodo",
+                    userStatus: "Estado",
+                    free: "Free",
+                    premium: "Premium",
+                    user: "Usuario",
+                    changePhoto: "Cambiar foto",
+                    profileSaved: "¡Perfil guardado con éxito!",
+                    taskSaved: "¡Tarea guardada con éxito!",
+                    projectSaved: "¡Proyecto guardado con éxito!"
+                },
+                chatbot: {
+                    greetings: ["¡Hola!", "¡Hola!", "¡Hola, cómo estás?", "¡Hola, cómo puedo ayudarte?"],
+                    help: [
+                        "Puedes crear notas haciendo clic en el botón 'Nueva Nota' en la pestaña de Notas.",
+                        "Para organizar mejor tus tareas, intenta categorizarlas por prioridad.",
+                        "Recuerda guardar tus notas regularmente para no perder información importante.",
+                        "Puedes preguntarme sobre cómo usar NotepadIA."
+                    ],
+                    unknown: "Lo siento, no entendí. ¿Podrías reformular tu pregunta?",
+                    thanks: "¡De nada! Estoy aquí para ayudar.",
+                    bye: "¡Hasta luego! Vuelve cuando lo necesites."
+                }
+            }
+        };
+        // Current language
+        let currentLanguage = 'pt';
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const app = document.getElementById('app');
+        const loginBtn = document.getElementById('login-btn');
+        const googleLoginBtn = document.getElementById('google-login');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const languageBtn = document.getElementById('language-btn');
+        const languageDropdown = document.getElementById('language-dropdown');
+        const currentLanguageText = document.getElementById('current-language');
+        const tabLinks = document.querySelectorAll('[data-tab]');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const notesTab = document.getElementById('notes-tab');
+        const tasksTab = document.getElementById('tasks-tab');
+        const projectsTab = document.getElementById('projects-tab');
+        const chatbotTab = document.getElementById('chatbot-tab');
+        const profileTab = document.getElementById('profile-tab');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const notesContainer = document.getElementById('notes-container');
+        const noteEditor = document.getElementById('note-editor');
+        const noteTitle = document.getElementById('note-title');
+        const noteContent = document.getElementById('note-content');
+        const closeEditor = document.getElementById('close-editor');
+        const cancelNote = document.getElementById('cancel-note');
+        const saveNote = document.getElementById('save-note');
+        const newTaskBtn = document.getElementById('new-task-btn');
+        const tasksContainer = document.getElementById('tasks-container');
+        const taskEditor = document.getElementById('task-editor');
+        const taskTitle = document.getElementById('task-title');
+        const taskDescription = document.getElementById('task-description');
+        const closeTaskEditor = document.getElementById('close-task-editor');
+        const cancelTask = document.getElementById('cancel-task');
+        const saveTask = document.getElementById('save-task');
+        const newProjectBtn = document.getElementById('new-project-btn');
+        const projectsContainer = document.getElementById('projects-container');
+        const projectEditor = document.getElementById('project-editor');
+        const projectTitle = document.getElementById('project-title');
+        const projectDescription = document.getElementById('project-description');
+        const closeProjectEditor = document.getElementById('close-project-editor');
+        const cancelProject = document.getElementById('cancel-project');
+        const saveProject = document.getElementById('save-project');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChat = document.getElementById('send-chat');
+        const profilePicContainer = document.getElementById('profile-pic-container');
+        const profilePic = document.getElementById('profile-pic');
+        const profileInitial = document.getElementById('profile-initial');
+        const profilePicInput = document.getElementById('profile-pic-input');
+        const changeProfilePic = document.getElementById('change-profile-pic');
+        const fullName = document.getElementById('full-name');
+        const nickname = document.getElementById('nickname');
+        const userStatus = document.getElementById('user-status');
+        const saveProfile = document.getElementById('save-profile');
+        const profileName = document.getElementById('profile-name');
+        const sidebarUsername = document.getElementById('sidebar-username');
+        const sidebarStatus = document.getElementById('sidebar-status');
+        const userAvatar = document.getElementById('user-avatar');
+        const sidebarAvatar = document.getElementById('sidebar-avatar');
+        const illustrations = document.querySelectorAll('.illustration');
+        // State
+        let currentTab = 'notes';
+        let currentNoteId = null;
+        let currentTaskId = null;
+        let currentProjectId = null;
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        let profile = JSON.parse(localStorage.getItem('profile')) || {
+            fullName: 'Usuário',
+            nickname: '',
+            status: 'free',
+            profilePic: ''
+        };
+        // Initialize
+        function init() {
+            // Set default tab
+            showTab(currentTab);
+            
+            // Load data
+            renderNotes();
+            renderTasks();
+            renderProjects();
+            loadProfile();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Apply current language
+            applyLanguage(currentLanguage);
+            
+            // Show illustrations when in view
+            setupIllustrations();
+            
+            // Add initial chatbot message
+            addChatMessage(translations[currentLanguage].chatbot.greetings[0], 'bot');
+        }
+        // Set up event listeners
+        function setupEventListeners() {
+            // Login button
+            loginBtn.addEventListener('click', () => {
+                loginScreen.classList.add('hidden');
+                app.classList.remove('hidden');
+            });
+            // Google login button (visual only)
+            googleLoginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(translations[currentLanguage].app.loginFeature);
+            });
+            // Sidebar toggle
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+            });
+            // Language dropdown
+            languageBtn.addEventListener('click', () => {
+                languageDropdown.classList.toggle('hidden');
+            });
+            // Close language dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!languageBtn.contains(e.target) && !languageDropdown.contains(e.target)) {
+                    languageDropdown.classList.add('hidden');
+                }
+            });
+            // Tab switching
+            tabLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tab = link.getAttribute('data-tab');
+                    currentTab = tab;
+                    showTab(tab);
+                });
+            });
+            // New note button
+            newNoteBtn.addEventListener('click', () => {
+                openNoteEditor();
+            });
+            // Note editor
+            closeEditor.addEventListener('click', () => {
+                noteEditor.classList.add('hidden');
+            });
+            cancelNote.addEventListener('click', () => {
+                noteEditor.classList.add('hidden');
+            });
+            saveNote.addEventListener('click', () => {
+                saveCurrentNote();
+            });
+            // New task button
+            newTaskBtn.addEventListener('click', () => {
+                openTaskEditor();
+            });
+            // Task editor
+            closeTaskEditor.addEventListener('click', () => {
+                taskEditor.classList.add('hidden');
+            });
+            cancelTask.addEventListener('click', () => {
+                taskEditor.classList.add('hidden');
+            });
+            saveTask.addEventListener('click', () => {
+                saveCurrentTask();
+            });
+            // New project button
+            newProjectBtn.addEventListener('click', () => {
+                openProjectEditor();
+            });
+            // Project editor
+            closeProjectEditor.addEventListener('click', () => {
+                projectEditor.classList.add('hidden');
+            });
+            cancelProject.addEventListener('click', () => {
+                projectEditor.classList.add('hidden');
+            });
+            saveProject.addEventListener('click', () => {
+                saveCurrentProject();
+            });
+            // Chat
+            sendChat.addEventListener('click', sendMessage);
+            
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            // Language selection
+            document.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const lang = btn.getAttribute('data-lang');
+                    currentLanguage = lang;
+                    applyLanguage(lang);
+                    languageDropdown.classList.add('hidden');
+                });
+            });
+            // Profile picture
+            changeProfilePic.addEventListener('click', () => {
+                profilePicInput.click();
+            });
+            profilePicInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        profilePic.src = event.target.result;
+                        profilePic.classList.remove('hidden');
+                        profileInitial.classList.add('hidden');
+                        
+                        // Save to profile
+                        profile.profilePic = event.target.result;
+                        localStorage.setItem('profile', JSON.stringify(profile));
+                        updateProfileUI();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            // Save profile
+            saveProfile.addEventListener('click', () => {
+                profile.fullName = fullName.value || translations[currentLanguage].app.user;
+                profile.nickname = nickname.value;
+                profile.status = userStatus.value;
+                
+                localStorage.setItem('profile', JSON.stringify(profile));
+                updateProfileUI();
+                
+                // Show success message
+                alert(translations[currentLanguage].app.profileSaved);
+            });
+            // Scroll event for illustrations
+            window.addEventListener('scroll', checkIllustrations);
+        }
+        // Show tab
+        function showTab(tabName) {
+            tabContents.forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Update active state in sidebar
+            tabLinks.forEach(link => {
+                if (link.getAttribute('data-tab') === tabName) {
+                    link.classList.add('bg-indigo-50', 'text-indigo-600');
+                } else {
+                    link.classList.remove('bg-indigo-50', 'text-indigo-600');
+                }
+            });
+        }
+        // Render notes
+        function renderNotes() {
+            notesContainer.innerHTML = '';
+            
+            if (notes.length === 0) {
+                notesContainer.innerHTML = `
+                    <div class="col-span-3 bg-white rounded-xl shadow-sm p-6 text-center">
+                        <p class="text-gray-500 py-10">${translations[currentLanguage].app.noNotes}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            notes.forEach((note, index) => {
+                const truncatedContent = note.content.length > 100 
+                    ? note.content.substring(0, 100) + '...' 
+                    : note.content;
+                
+                const noteCard = document.createElement('div');
+                noteCard.className = 'bg-white rounded-xl shadow-sm p-4 note-card transition duration-200 cursor-pointer hover:border-indigo-200 border border-transparent';
+                noteCard.innerHTML = `
+                    <h3 class="font-medium text-gray-800 mb-2">${note.title || translations[currentLanguage].app.noteTitlePlaceholder}</h3>
+                    <p class="text-gray-600 text-sm mb-3">${truncatedContent}</p>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span>${new Date(note.updatedAt).toLocaleDateString()}</span>
+                        <div class="space-x-2">
+                            <button class="edit-note text-indigo-600 hover:text-indigo-800" data-id="${index}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-note text-red-600 hover:text-red-800" data-id="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event to open note
+                noteCard.addEventListener('click', () => {
+                    openNoteEditor(index);
+                });
+                
+                // Add edit button event
+                const editBtn = noteCard.querySelector('.edit-note');
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openNoteEditor(index);
+                });
+                
+                // Add delete button event
+                const deleteBtn = noteCard.querySelector('.delete-note');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteNote(index);
+                });
+                
+                notesContainer.appendChild(noteCard);
+            });
+        }
+        // Render tasks
+        function renderTasks() {
+            tasksContainer.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = `
+                    <div class="col-span-3 bg-white rounded-xl shadow-sm p-6 text-center">
+                        <p class="text-gray-500 py-10">${translations[currentLanguage].app.noTasks}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tasks.forEach((task, index) => {
+                const truncatedDescription = task.description.length > 100 
+                    ? task.description.substring(0, 100) + '...' 
+                    : task.description;
+                
+                const taskCard = document.createElement('div');
+                taskCard.className = 'bg-white rounded-xl shadow-sm p-4 task-card transition duration-200 cursor-pointer hover:border-indigo-200 border border-transparent';
+                taskCard.innerHTML = `
+                    <h3 class="font-medium text-gray-800 mb-2">${task.title || translations[currentLanguage].app.taskTitlePlaceholder}</h3>
+                    <p class="text-gray-600 text-sm mb-3">${truncatedDescription}</p>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span>${new Date(task.updatedAt).toLocaleDateString()}</span>
+                        <div class="space-x-2">
+                            <button class="edit-task text-indigo-600 hover:text-indigo-800" data-id="${index}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-task text-red-600 hover:text-red-800" data-id="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event to open task
+                taskCard.addEventListener('click', () => {
+                    openTaskEditor(index);
+                });
+                
+                // Add edit button event
+                const editBtn = taskCard.querySelector('.edit-task');
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openTaskEditor(index);
+                });
+                
+                // Add delete button event
+                const deleteBtn = taskCard.querySelector('.delete-task');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteTask(index);
+                });
+                
+                tasksContainer.appendChild(taskCard);
+            });
+        }
+        // Render projects
+        function renderProjects() {
+            projectsContainer.innerHTML = '';
+            
+            if (projects.length === 0) {
+                projectsContainer.innerHTML = `
+                    <div class="col-span-3 bg-white rounded-xl shadow-sm p-6 text-center">
+                        <p class="text-gray-500 py-10">${translations[currentLanguage].app.noProjects}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            projects.forEach((project, index) => {
+                const truncatedDescription = project.description.length > 100 
+                    ? project.description.substring(0, 100) + '...' 
+                    : project.description;
+                
+                const projectCard = document.createElement('div');
+                projectCard.className = 'bg-white rounded-xl shadow-sm p-4 project-card transition duration-200 cursor-pointer hover:border-indigo-200 border border-transparent';
+                projectCard.innerHTML = `
+                    <h3 class="font-medium text-gray-800 mb-2">${project.title || translations[currentLanguage].app.projectTitlePlaceholder}</h3>
+                    <p class="text-gray-600 text-sm mb-3">${truncatedDescription}</p>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span>${new Date(project.updatedAt).toLocaleDateString()}</span>
+                        <div class="space-x-2">
+                            <button class="edit-project text-indigo-600 hover:text-indigo-800" data-id="${index}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-project text-red-600 hover:text-red-800" data-id="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event to open project
+                projectCard.addEventListener('click', () => {
+                    openProjectEditor(index);
+                });
+                
+                // Add edit button event
+                const editBtn = projectCard.querySelector('.edit-project');
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openProjectEditor(index);
+                });
+                
+                // Add delete button event
+                const deleteBtn = projectCard.querySelector('.delete-project');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteProject(index);
+                });
+                
+                projectsContainer.appendChild(projectCard);
+            });
+        }
+        // Open note editor
+        function openNoteEditor(noteId = null) {
+            currentNoteId = noteId;
+            
+            if (noteId !== null) {
+                const note = notes[noteId];
+                noteTitle.value = note.title || '';
+                noteContent.value = note.content || '';
+            } else {
+                noteTitle.value = '';
+                noteContent.value = '';
+            }
+            
+            noteEditor.classList.remove('hidden');
+        }
+        // Open task editor
+        function openTaskEditor(taskId = null) {
+            currentTaskId = taskId;
+            
+            if (taskId !== null) {
+                const task = tasks[taskId];
+                taskTitle.value = task.title || '';
+                taskDescription.value = task.description || '';
+            } else {
+                taskTitle.value = '';
+                taskDescription.value = '';
+            }
+            
+            taskEditor.classList.remove('hidden');
+        }
+        // Open project editor
+        function openProjectEditor(projectId = null) {
+            currentProjectId = projectId;
+            
+            if (projectId !== null) {
+                const project = projects[projectId];
+                projectTitle.value = project.title || '';
+                projectDescription.value = project.description || '';
+            } else {
+                projectTitle.value = '';
+                projectDescription.value = '';
+            }
+            
+            projectEditor.classList.remove('hidden');
+        }
+        // Save current note
+        function saveCurrentNote() {
+            const title = noteTitle.value.trim();
+            const content = noteContent.value.trim();
+            
+            if (!content) {
+                alert('A nota não pode estar vazia!');
+                return;
+            }
+            
+            const now = new Date();
+            
+            if (currentNoteId !== null) {
+                // Update existing note
+                notes[currentNoteId] = {
+                    title,
+                    content,
+                    updatedAt: now
+                };
+            } else {
+                // Create new note
+                notes.push({
+                    title,
+                    content,
+                    createdAt: now,
+                    updatedAt: now
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('notes', JSON.stringify(notes));
+            
+            // Close editor and refresh notes
+            noteEditor.classList.add('hidden');
+            renderNotes();
+        }
+        // Save current task
+        function saveCurrentTask() {
+            const title = taskTitle.value.trim();
+            const description = taskDescription.value.trim();
+            
+            if (!description) {
+                alert('A tarefa não pode estar vazia!');
+                return;
+            }
+            
+            const now = new Date();
+            
+            if (currentTaskId !== null) {
+                // Update existing task
+                tasks[currentTaskId] = {
+                    title,
+                    description,
+                    updatedAt: now
+                };
+            } else {
+                // Create new task
+                tasks.push({
+                    title,
+                    description,
+                    createdAt: now,
+                    updatedAt: now
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            
+            // Close editor and refresh tasks
+            taskEditor.classList.add('hidden');
+            renderTasks();
+            
+            // Show success message
+            alert(translations[currentLanguage].app.taskSaved);
+        }
+        // Save current project
+        function saveCurrentProject() {
+            const title = projectTitle.value.trim();
+            const description = projectDescription.value.trim();
+            
+            if (!description) {
+                alert('O projeto não pode estar vazio!');
+                return;
+            }
+            
+            const now = new Date();
+            
+            if (currentProjectId !== null) {
+                // Update existing project
+                projects[currentProjectId] = {
+                    title,
+                    description,
+                    updatedAt: now
+                };
+            } else {
+                // Create new project
+                projects.push({
+                    title,
+                    description,
+                    createdAt: now,
+                    updatedAt: now
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('projects', JSON.stringify(projects));
+            
+            // Close editor and refresh projects
+            projectEditor.classList.add('hidden');
+            renderProjects();
+            
+            // Show success message
+            alert(translations[currentLanguage].app.projectSaved);
+        }
+        // Delete note
+        function deleteNote(noteId) {
+            if (confirm('Tem certeza que deseja excluir esta nota?')) {
+                notes.splice(noteId, 1);
+                localStorage.setItem('notes', JSON.stringify(notes));
+                renderNotes();
+            }
+        }
+        // Delete task
+        function deleteTask(taskId) {
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                tasks.splice(taskId, 1);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+        }
+        // Delete project
+        function deleteProject(projectId) {
+            if (confirm('Tem certeza que deseja excluir este projeto?')) {
+                projects.splice(projectId, 1);
+                localStorage.setItem('projects', JSON.stringify(projects));
+                renderProjects();
+            }
+        }
+        // Send chat message
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+            
+            // Simulate AI response after a delay
+            setTimeout(() => {
+                const langData = translations[currentLanguage].chatbot;
+                let response;
+                
+                // Check for greetings
+                if (message.toLowerCase().includes('oi') || 
+                    message.toLowerCase().includes('olá') || 
+                    message.toLowerCase().includes('hello') || 
+                    message.toLowerCase().includes('hi')) {
+                    response = langData.greetings[Math.floor(Math.random() * langData.greetings.length)];
+                } 
+                // Check for thanks
+                else if (message.toLowerCase().includes('obrigado') || 
+                         message.toLowerCase().includes('obrigada') || 
+                         message.toLowerCase().includes('thanks') || 
+                         message.toLowerCase().includes('gracias')) {
+                    response = langData.thanks;
+                }
+                // Check for goodbye
+                else if (message.toLowerCase().includes('tchau') || 
+                         message.toLowerCase().includes('até logo') || 
+                         message.toLowerCase().includes('bye') || 
+                         message.toLowerCase().includes('adiós')) {
+                    response = langData.bye;
+                }
+                // Check for help
+                else if (message.toLowerCase().includes('ajuda') || 
+                         message.toLowerCase().includes('help') || 
+                         message.toLowerCase().includes('ayuda') ||
+                         message.toLowerCase().includes('como usar') ||
+                         message.toLowerCase().includes('how to use')) {
+                    response = langData.help[Math.floor(Math.random() * langData.help.length)];
+                }
+                // Default response
+                else {
+                    response = langData.unknown;
+                }
+                
+                addChatMessage(response, 'bot');
+            }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+        }
+        // Add chat message
+        function addChatMessage(message, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender} ${sender === 'user' ? 'bg-indigo-600 text-white ml-auto' : 'bg-indigo-50 text-gray-800'} p-4 max-w-xs md:max-w-md lg:max-w-lg fade-in`;
+            messageDiv.innerHTML = `<p>${message}</p>`;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        // Load profile
+        function loadProfile() {
+            fullName.value = profile.fullName;
+            nickname.value = profile.nickname || '';
+            userStatus.value = profile.status || 'free';
+            
+            if (profile.profilePic) {
+                profilePic.src = profile.profilePic;
+                profilePic.classList.remove('hidden');
+                profileInitial.classList.add('hidden');
+            } else {
+                profileInitial.textContent = profile.fullName.charAt(0).toUpperCase();
+            }
+            
+            updateProfileUI();
+        }
+        // Update profile UI
+        function updateProfileUI() {
+            // Update profile tab
+            profileName.textContent = profile.fullName;
+            
+            // Update sidebar
+            sidebarUsername.textContent = profile.fullName;
+            sidebarStatus.textContent = profile.status === 'premium' ? 'Premium' : 'Free';
+            
+            // Update avatar initials
+            const initial = profile.fullName.charAt(0).toUpperCase();
+            userAvatar.textContent = initial;
+            sidebarAvatar.textContent = initial;
+            
+            // Update profile pic if exists
+            if (profile.profilePic) {
+                profilePic.src = profile.profilePic;
+                profilePic.classList.remove('hidden');
+                profileInitial.classList.add('hidden');
+                
+                // Update sidebar avatar
+                sidebarAvatar.innerHTML = '';
+                const sidebarAvatarImg = document.createElement('img');
+                sidebarAvatarImg.src = profile.profilePic;
+                sidebarAvatarImg.className = 'h-full w-full object-cover';
+                sidebarAvatar.appendChild(sidebarAvatarImg);
+            } else {
+                profileInitial.textContent = initial;
+                profileInitial.classList.remove('hidden');
+                profilePic.classList.add('hidden');
+            }
+        }
+        // Apply language
+        function applyLanguage(lang) {
+            const langData = translations[lang];
+            
+            if (!langData) return;
+            
+            // Update login screen
+            if (loginScreen && langData.login) {
+                document.querySelector('#login-screen h1').textContent = langData.login.title;
+                document.querySelector('#login-screen p').textContent = langData.login.subtitle;
+                document.querySelector('#login-screen label[for="email"]').textContent = langData.login.email;
+                document.querySelector('#email').placeholder = langData.login.emailPlaceholder;
+                document.querySelector('#login-screen label[for="password"]').textContent = langData.login.password;
+                document.querySelector('#login-btn').textContent = langData.login.loginBtn;
+                document.querySelector('#google-login span').textContent = langData.login.googleLogin;
+                document.querySelector('#login-screen .text-center p').innerHTML = `${langData.login.noAccount} <span class="text-indigo-600 cursor-pointer hover:underline">${langData.login.createAccount}</span>`;
+            }
+            
+            // Update app
+            if (app && langData.app) {
+                // Sidebar
+                document.querySelector('[data-tab="notes"] .sidebar-text').textContent = langData.app.notes;
+                document.querySelector('[data-tab="tasks"] .sidebar-text').textContent = langData.app.tasks;
+                document.querySelector('[data-tab="projects"] .sidebar-text').textContent = langData.app.projects;
+                document.querySelector('[data-tab="chatbot"] .sidebar-text').textContent = langData.app.chatbot;
+                document.querySelector('[data-tab="profile"] .sidebar-text').textContent = langData.app.profile;
+                
+                // Notes tab
+                document.querySelector('#notes-tab h2').textContent = langData.app.myNotes;
+                document.querySelector('#new-note-text').textContent = langData.app.newNote;
+                document.querySelector('#note-title').placeholder = langData.app.noteTitlePlaceholder;
+                document.querySelector('#note-content').placeholder = langData.app.noteContentPlaceholder;
+                document.querySelector('#cancel-note').textContent = langData.app.cancel;
+                document.querySelector('#save-note').textContent = langData.app.saveNote;
+                
+                // Tasks tab
+                document.querySelector('#tasks-tab h2').textContent = langData.app.myTasks;
+                document.querySelector('#new-task-text').textContent = langData.app.newTask;
+                document.querySelector('#task-title').placeholder = langData.app.taskTitlePlaceholder;
+                document.querySelector('#task-description').placeholder = langData.app.taskDescriptionPlaceholder;
+                document.querySelector('#cancel-task').textContent = langData.app.cancel;
+                document.querySelector('#save-task').textContent = langData.app.saveTask;
+                
+                // Projects tab
+                document.querySelector('#projects-tab h2').textContent = langData.app.myProjects;
+                document.querySelector('#new-project-text').textContent = langData.app.newProject;
+                document.querySelector('#project-title').placeholder = langData.app.projectTitlePlaceholder;
+                document.querySelector('#project-description').placeholder = langData.app.projectDescriptionPlaceholder;
+                document.querySelector('#cancel-project').textContent = langData.app.cancel;
+                document.querySelector('#save-project').textContent = langData.app.saveProject;
+                
+                // Chatbot tab
+                document.querySelector('#chatbot-tab h2').textContent = langData.app.chatbotTitle;
+                document.querySelector('#chatbot-status').textContent = langData.app.chatbotStatus;
+                document.querySelector('#chat-input').placeholder = langData.app.chatbotPlaceholder;
+                document.querySelector('#chat-disclaimer').textContent = langData.app.chatbotDisclaimer;
+                
+                // Profile tab
+                document.querySelector('#profile-tab h2').textContent = langData.app.myProfile;
+                document.querySelector('#full-name').placeholder = langData.app.fullName;
+                document.querySelector('#nickname').placeholder = langData.app.nickname;
+                document.querySelector('label[for="user-status"]').textContent = langData.app.userStatus;
+                document.querySelector('#save-profile').textContent = langData.app.saveProfile;
+                
+                // Update profile status options
+                const statusSelect = document.getElementById('user-status');
+                statusSelect.innerHTML = '';
+                const freeOption = document.createElement('option');
+                freeOption.value = 'free';
+                freeOption.textContent = langData.app.free;
+                const premiumOption = document.createElement('option');
+                premiumOption.value = 'premium';
+                premiumOption.textContent = langData.app.premium;
+                statusSelect.appendChild(freeOption);
+                statusSelect.appendChild(premiumOption);
+                
+                // Update profile status if it exists
+                if (profile) {
+                    statusSelect.value = profile.status || 'free';
+                }
+            }
+            
+            // Update current language indicator
+            currentLanguageText.textContent = lang.toUpperCase();
+            
+            // Update flag icon
+            const flagUrl = {
+                'pt': 'https://flagcdn.com/16x12/br.png',
+                'en': 'https://flagcdn.com/16x12/us.png',
+                'es': 'https://flagcdn.com/16x12/es.png'
+            }[lang];
+            
+            document.querySelector('#language-btn .language-flag').style.backgroundImage = `url('${flagUrl}')`;
+        }
+        // Setup illustrations
+        function setupIllustrations() {
+            // Show initial illustrations
+            setTimeout(() => {
+                illustrations.forEach(illustration => {
+                    illustration.classList.add('visible');
+                });
+            }, 500);
+            
+            // Check on scroll
+            checkIllustrations();
+        }
+        // Check illustrations on scroll
+        function checkIllustrations() {
+            illustrations.forEach(illustration => {
+                const rect = illustration.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    illustration.classList.add('visible');
+                }
+            });
+        }
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=z3vlr/notepadia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
